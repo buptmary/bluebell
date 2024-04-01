@@ -11,6 +11,7 @@ import (
 var (
 	rdb *redis.Client
 	ctx = context.Background()
+	Nil = redis.Nil // 实际生成环境下 context.Background() 按需替换
 )
 
 // Init 初始化连接
