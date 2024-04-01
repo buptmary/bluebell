@@ -14,8 +14,8 @@ const (
 	CodeInvalidToken
 	CodeInvalidAuthFormat
 	CodeNotLogin
-	ErrVoteRepeated
-	ErrorVoteTimeExpire
+	CodeVoteRepeated
+	CodeVoteTimeExpire
 )
 
 var codeMsgMap = map[ResCode]string{
@@ -29,8 +29,8 @@ var codeMsgMap = map[ResCode]string{
 	CodeInvalidToken:      "无效的Token",
 	CodeInvalidAuthFormat: "认证格式有误",
 	CodeNotLogin:          "未登录",
-	ErrVoteRepeated:       "请勿重复投票",
-	ErrorVoteTimeExpire:   "投票时间已过",
+	CodeVoteRepeated:      "请勿重复投票",
+	CodeVoteTimeExpire:    "投票时间已过",
 }
 
 func (code ResCode) Msg() string {
