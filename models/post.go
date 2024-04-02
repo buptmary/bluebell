@@ -2,6 +2,11 @@ package models
 
 import "time"
 
+const (
+	OrderTime  = "time"
+	OrderScore = "score"
+)
+
 // Post 帖子Post结构体 内存对齐概念 字段类型相同的对齐 缩小变量所占内存大小
 type Post struct {
 	PostID      int64     `json:"post_id,string" gorm:"column:post_id"`
@@ -19,4 +24,13 @@ type ApiPostDetail struct {
 	*Post                               // 嵌入帖子结构体
 	*CommunityDetail `json:"community"` // 嵌入社区信息 json tag 将CommunityDetail 单独放入 community字段
 	AuthorName       string             `json:"author_name"`
+}
+
+// PostListForm 获取帖子列表query string参数
+type PostListForm struct {
+	Search      string `json:"search" form:"search"`
+	CommunityID int64  `json:"community_id" form:"community_id"`
+	Page        int64  `json:"page" form:"page"`
+	Size        int64  `json:"size" form:"size"`
+	Order       string `json:"order" form:"order"`
 }
