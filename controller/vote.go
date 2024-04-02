@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// PostVoteHandler 投票函数
 func PostVoteHandler(c *gin.Context) {
 	// 1. 获取参数及参数校验
 	vote := new(models.VoteDataForm)
