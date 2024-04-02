@@ -111,13 +111,21 @@ func GetPostList2(p *models.PostListForm) (data []*models.ApiPostDetail, err err
 	}
 
 	// 2. 根据id去MySQL数据库查询帖子详细信息
+	// 返回的数据要按照给定的id顺序返回
 	postList, err := mysql.GetPostListByIDs(ids)
 	if err != nil {
 		return
 	}
 
+	// 3. 查询每篇帖子的投票数
+	voteData, err := redis.GetPostVoteData(ids)
+	if err != nil {
+		zap.L().Debug("redis.GetPostVoteData(ids)", zap.Any("ids", ids))
+		return nil, err
+	}
+
 	// 3. 将帖子的作者和社区信息查询出来，填充到帖子中
-	for _, post := range postList {
+	for idx, post := range postList {
 		// 根据 authorID 获取作者信息
 		user, err := mysql.GetUserByID(post.AuthorID)
 		if err != nil {
@@ -136,6 +144,7 @@ func GetPostList2(p *models.PostListForm) (data []*models.ApiPostDetail, err err
 			Post:            post,
 			CommunityDetail: community,
 			AuthorName:      user.UserName,
+			VoteNum:         voteData[idx],
 		}
 		data = append(data, postDetail)
 	}

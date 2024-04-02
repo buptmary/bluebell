@@ -9,9 +9,7 @@ import (
 
 // 声明一个全局的rdb变量
 var (
-	rdb *redis.Client
-	ctx = context.Background()
-	Nil = redis.Nil // 实际生成环境下 context.Background() 按需替换
+	rdb *redis.Client // 实际生成环境下 context.Background() 按需替换
 )
 
 // Init 初始化连接
@@ -27,7 +25,7 @@ func Init(redisConfig *settings.RedisConfig) (err error) {
 		DB:       redisConfig.DB,
 	})
 
-	_, err = rdb.Ping(ctx).Result()
+	_, err = rdb.Ping(context.Background()).Result()
 	if err != nil {
 		return err
 	}

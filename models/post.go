@@ -24,6 +24,7 @@ type ApiPostDetail struct {
 	*Post                               // 嵌入帖子结构体
 	*CommunityDetail `json:"community"` // 嵌入社区信息 json tag 将CommunityDetail 单独放入 community字段
 	AuthorName       string             `json:"author_name"`
+	VoteNum          int64              `json:"vote_num"` // 投票数量
 }
 
 // PostListForm 获取帖子列表query string参数
