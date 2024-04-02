@@ -2,6 +2,7 @@ package logic
 
 import (
 	"bluebell/dao/mysql"
+	"bluebell/dao/redis"
 	"bluebell/models"
 	"bluebell/pkg/snowflake"
 	"go.uber.org/zap"
@@ -18,7 +19,14 @@ func CreatePost(post *models.Post) (err error) {
 		zap.L().Error("mysql.CreatePost(post)", zap.Error(err))
 		return err
 	}
-	return err
+
+	// 3. 向redis存储帖子信息
+	if err := redis.CreatePost(post.PostID); err != nil {
+		zap.L().Error("redis.CreatePost(post.PostID) failed", zap.Error(err))
+		return err
+	}
+
+	return nil
 }
 
 // GetPostByID 根据Id查询帖子详情
