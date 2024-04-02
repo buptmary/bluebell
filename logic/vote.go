@@ -4,6 +4,7 @@ import (
 	"bluebell/dao/redis"
 	"bluebell/models"
 	"fmt"
+	"go.uber.org/zap"
 )
 
 // 投票功能
@@ -40,5 +41,9 @@ func VoteForPost(userID int64, p *models.VoteDataForm) (err error) {
 	// 1. 判断投票限制
 	// 2. 更新帖子分数
 	// 3. 记录用户为该帖子投票的数据
+	zap.L().Debug("VoteForPost",
+		zap.Int64("userID", userID),
+		zap.String("postID", p.PostID),
+		zap.Int("Direction", p.Direction))
 	return redis.VoteForPost(fmt.Sprintf("%d", userID), p.PostID, float64(p.Direction))
 }

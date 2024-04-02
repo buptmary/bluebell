@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"bluebell/dao/redis"
 	"bluebell/logic"
 	"bluebell/models"
 	"errors"
@@ -19,7 +20,7 @@ func PostVoteHandler(c *gin.Context) {
 			ResponseError(c, CodeInvalidParams)
 			return
 		}
-		ResponseErrorWithMsg(c, CodeInvalidParams, err.Error())
+		ResponseErrorWithMsg(c, CodeInvalidParams, "投票参数错误")
 		return
 	}
 	// 获取当前用户的id
@@ -32,7 +33,14 @@ func PostVoteHandler(c *gin.Context) {
 	// 具体投票的业务逻辑
 	if err := logic.VoteForPost(userID, vote); err != nil {
 		zap.L().Error("logic.VoteForPost() failed", zap.Error(err))
-		ResponseError(c, CodeVoteRepeated)
+		switch {
+		case errors.Is(err, redis.ErrorVoteRepeated):
+			ResponseError(c, CodeVoteRepeated)
+		case errors.Is(err, redis.ErrorVoteTimeExpire):
+			ResponseError(c, CodeVoteTimeExpire)
+		default:
+			ResponseError(c, CodeServerBusy)
+		}
 		return
 	}
 

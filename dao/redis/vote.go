@@ -16,6 +16,16 @@ var (
 	ErrorVoteRepeated   = errors.New("不允许重复投票")
 )
 
+// CreatePost redis存储帖子信息 使用hash存储帖子信息
+func CreatePost(postID int64) (err error) {
+	now := float64(time.Now().Unix()) // Unix时间戳: 从 Unix纪元（1970年1月1日 UTC）到当前时间的总秒数
+	_, err = rdb.ZAdd(ctx, KeyPostTimeZSet, redis.Z{
+		Score:  now,
+		Member: postID,
+	}).Result()
+	return err
+}
+
 // VoteForPost	为帖子投票
 func VoteForPost(userID, postID string, value float64) (err error) {
 	// 1. 判断投票限制
