@@ -26,6 +26,7 @@ func SetupRouter() *gin.Engine {
 		v1.GET("/posts", controller.PostListHandler)
 		// 根据时间或分数获取帖子列表
 		v1.GET("/posts2", controller.GetPostList2Handler)
+		v1.GET("/posts3", controller.GetCommunityPostListHandler)
 
 		// 投票
 		v1.POST("/vote", controller.PostVoteHandler)

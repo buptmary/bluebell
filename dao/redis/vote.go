@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/redis/go-redis/v9"
+	"strconv"
 	"time"
 )
 
@@ -18,7 +19,7 @@ var (
 )
 
 // CreatePost redis存储帖子信息 使用hash存储帖子信息
-func CreatePost(postID int64) (err error) {
+func CreatePost(postID, communityID int64) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
 	defer cancel()
 
@@ -37,6 +38,10 @@ func CreatePost(postID int64) (err error) {
 		Score:  now,
 		Member: postID,
 	}).Result()
+
+	// 更新：将帖子ID加入到社区的Set
+	communityKey := KeyCommunitySetPrefix + strconv.Itoa(int(communityID))
+	pipeline.SAdd(ctx, communityKey, postID)
 
 	// 执行pipeline
 	_, err = pipeline.Exec(ctx)

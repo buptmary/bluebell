@@ -21,7 +21,7 @@ func CreatePost(post *models.Post) (err error) {
 	}
 
 	// 3. 向redis存储帖子信息
-	if err := redis.CreatePost(post.PostID); err != nil {
+	if err := redis.CreatePost(post.PostID, post.CommunityID); err != nil {
 		zap.L().Error("redis.CreatePost(post.PostID) failed", zap.Error(err))
 		return err
 	}
@@ -107,6 +107,7 @@ func GetPostList2(p *models.PostListForm) (data []*models.ApiPostDetail, err err
 		return nil, err
 	}
 	if len(ids) == 0 {
+		zap.L().Warn("redis.GetPostIDsInOrder(p) return 0 data")
 		return nil, err
 	}
 
@@ -123,6 +124,63 @@ func GetPostList2(p *models.PostListForm) (data []*models.ApiPostDetail, err err
 		zap.L().Debug("redis.GetPostVoteData(ids)", zap.Any("ids", ids))
 		return nil, err
 	}
+
+	// 3. 将帖子的作者和社区信息查询出来，填充到帖子中
+	for idx, post := range postList {
+		// 根据 authorID 获取作者信息
+		user, err := mysql.GetUserByID(post.AuthorID)
+		if err != nil {
+			zap.L().Error("mysql.GetUserByID(post.AuthorID) failed", zap.Int64("post.uid", post.AuthorID), zap.Error(err))
+			return nil, err
+		}
+		// 根据 CommunityID 获取社区信息
+		community, err := mysql.GetCommunityByID(post.CommunityID)
+		if err != nil {
+			zap.L().Error("mysql.GetCommunityByID(post.CommunityID) failed", zap.Int64("community_id", post.CommunityID), zap.Error(err))
+			return nil, err
+		}
+
+		// 数据接口拼接
+		postDetail := &models.ApiPostDetail{
+			Post:            post,
+			CommunityDetail: community,
+			AuthorName:      user.UserName,
+			VoteNum:         voteData[idx],
+		}
+		data = append(data, postDetail)
+	}
+	return data, nil
+
+}
+
+func GetCommunityPostList(p *models.PostListForm) (data []*models.ApiPostDetail, err error) {
+	// 1. 根据参数中的排序规则去redis查询id列表
+	ids, err := redis.GetCommunityPostIDsInOrder(p)
+	if err != nil {
+		zap.L().Warn("post id list is 0")
+		return nil, err
+	}
+	if len(ids) == 0 {
+		zap.L().Warn("redis.GetCommunityPostIDsInOrder(p) return 0 data")
+		return nil, err
+	}
+	zap.L().Debug("GetCommunityPostIDsInOrder", zap.Any("ids", ids))
+
+	// 2. 根据id去MySQL数据库查询帖子详细信息
+	// 返回的数据要按照给定的id顺序返回
+	postList, err := mysql.GetPostListByIDs(ids)
+	if err != nil {
+		return
+	}
+
+	// 3. 查询每篇帖子的投票数
+	voteData, err := redis.GetPostVoteData(ids)
+	if err != nil {
+		zap.L().Debug("redis.GetPostVoteData(ids)", zap.Any("ids", ids))
+		return nil, err
+	}
+
+	data = make([]*models.ApiPostDetail, 0, len(postList))
 
 	// 3. 将帖子的作者和社区信息查询出来，填充到帖子中
 	for idx, post := range postList {
