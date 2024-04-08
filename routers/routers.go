@@ -2,12 +2,16 @@ package routers
 
 import (
 	"bluebell/controller"
+	"bluebell/middlewares"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
 )
 
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
+
+	r.Use(middlewares.RateLimitMiddleware(2*time.Second, 10)) // 每2秒添加1个令牌 容量为40
 	v1 := r.Group("/api/v1")
 	// 用户注册
 	v1.POST("/login", controller.LoginHandler)
@@ -26,15 +30,12 @@ func SetupRouter() *gin.Engine {
 		v1.GET("/posts", controller.PostListHandler)
 		// 根据时间或分数获取帖子列表
 		v1.GET("/posts2", controller.GetPostList2Handler)
-		v1.GET("/posts3", controller.GetCommunityPostListHandler)
 
 		// 投票
 		v1.POST("/vote", controller.PostVoteHandler)
 
-		v1.GET("/home", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{
-				"msg": "ok",
-			})
+		v1.GET("/ping", func(c *gin.Context) {
+			c.String(http.StatusOK, "pong")
 		})
 	}
 
