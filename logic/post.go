@@ -98,8 +98,8 @@ func GetPostList(page, size int64) ([]*models.ApiPostDetail, error) {
 	return data, nil
 }
 
-// GetPostList2 升级版帖子列表接口：按 创建时间 或者 分数排序
-func GetPostList2(p *models.PostListForm) (data []*models.ApiPostDetail, err error) {
+// GetPostListInOrder 升级版帖子列表接口：按 创建时间 或者 分数排序
+func GetPostListInOrder(p *models.PostListForm) (data []*models.ApiPostDetail, err error) {
 	// 1. 根据参数中的排序规则去redis查询id列表
 	ids, err := redis.GetPostIDsInOrder(p)
 	if err != nil {
@@ -117,6 +117,8 @@ func GetPostList2(p *models.PostListForm) (data []*models.ApiPostDetail, err err
 	if err != nil {
 		return
 	}
+	//zap.L().Debug("ids", zap.Any("ids", ids))
+	//zap.L().Debug("postlist", zap.Any("ids", postList))
 
 	// 3. 查询每篇帖子的投票数
 	voteData, err := redis.GetPostVoteData(ids)
@@ -207,5 +209,23 @@ func GetCommunityPostList(p *models.PostListForm) (data []*models.ApiPostDetail,
 		data = append(data, postDetail)
 	}
 	return data, nil
+}
 
+func GetPostListPro(p *models.PostListForm) (data []*models.ApiPostDetail, err error) {
+	// 根据请求参数的不同，执行不同的业务逻辑
+	// 如果CommunityID = 0，查询所有帖子列表
+	if p.CommunityID == 0 {
+		zap.L().Debug("Get post list by time/score")
+		data, err = GetPostListInOrder(p)
+	} else {
+		// 根据社区id查询列表
+		zap.L().Debug("get post list by community_id")
+		data, err = GetCommunityPostList(p)
+	}
+
+	if err != nil {
+		zap.L().Error("GetPostListPro failed", zap.Error(err))
+		return nil, err
+	}
+	return data, nil
 }

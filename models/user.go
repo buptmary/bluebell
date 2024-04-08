@@ -7,6 +7,7 @@ type User struct {
 	Password string `json:"password"`
 }
 
+// RegisterForm 注册请求结构体
 type RegisterForm struct {
 	UserName        string `json:"username" binding:"required"`
 	Password        string `json:"password" binding:"required"`

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"strings"
 )
 
 // CreatePost 创建帖子
@@ -49,7 +50,8 @@ func GetPostList(page, size int64) ([]*models.Post, error) {
 
 // GetPostListByIDs 根据给定的id列表查询帖子数据
 func GetPostListByIDs(ids []string) (postList []*models.Post, err error) {
-	err = db.Where("post_id IN ?", ids).Find(&postList).Error
+	idsStr := strings.Join(ids, ",")
+	err = db.Where("post_id IN ?", ids).Order("FIELD(post_id," + idsStr + ")").Find(&postList).Error
 	if err != nil {
 		zap.L().Error("mysql GetPostListByIDs() failed", zap.Error(err))
 		return nil, err
